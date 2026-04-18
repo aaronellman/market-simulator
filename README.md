@@ -12,3 +12,6 @@ A simulated financial exchange engine built in Python. Features a limit order bo
 - **Pydantic**
 - **asyncio**
 - **pytest**
+
+## Possible Features
+- **Loan System**
