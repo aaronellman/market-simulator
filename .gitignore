@@ -1,6 +1,7 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
+.pyc
 build/
 dist/
 wheels/
@@ -9,3 +10,7 @@ wheels/
 # Virtual environments
 .venv
 .history/
+.env
+
+#IDE
+.vscode/
