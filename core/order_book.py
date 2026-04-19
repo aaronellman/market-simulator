@@ -1,5 +1,5 @@
-from order import Order
-from order import Side
+from core.order import Order
+from core.order import Side
 from sortedcontainers import SortedDict
 
 class OrderBook:
