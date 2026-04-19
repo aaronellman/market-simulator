@@ -1,6 +1,6 @@
-from order_book import OrderBook
-from order import Order
-from order import Side
+from core.order_book import OrderBook
+from core.order import Order
+from core.order import Side
 from sortedcontainers import SortedDict
 from typing import Callable
 
@@ -32,7 +32,7 @@ class MatchingEngine():
                         break
                 else:
                     self.order_book.add_order(order)
-                    break
+                    return False
             else:
                 
                 if best_price >= order.price:
@@ -48,7 +48,7 @@ class MatchingEngine():
                         break
                 else:
                     self.order_book.add_order(order)
-                    break
+                    return False
         
         return True
 
