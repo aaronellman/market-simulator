@@ -100,3 +100,38 @@ def test_match_order_ask_quantity_equals_bid():
 
     assert price not in order_book.asks
     assert price not in order_book.bids 
+
+
+def test_match_bid_equals_ask():
+    order_book = OrderBook()
+    matching_engine = MatchingEngine(order_book)
+
+    price = 100.0
+
+    bid_order = Order(price=price,side=Side.BUY, quantity=100, symbol="TEST")
+    ask_order = Order(price=price,side=Side.SELL, quantity=100, symbol="TEST")
+
+    order_book.add_order(ask_order)
+
+    matching_engine.match(bid_order)
+
+    assert price not in order_book.asks
+    assert price not in order_book.bids 
+
+
+def test_match_ask_equals_bid():
+    order_book = OrderBook()
+    matching_engine = MatchingEngine(order_book)
+
+    price = 100.0
+
+    bid_order = Order(price=price,side=Side.BUY, quantity=100, symbol="TEST")
+    ask_order = Order(price=price,side=Side.SELL, quantity=100, symbol="TEST")
+
+    order_book.add_order(bid_order)
+
+    matching_engine.match(ask_order)
+
+    assert price not in order_book.asks
+    assert price not in order_book.bids 
+
