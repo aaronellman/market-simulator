@@ -1,20 +1,29 @@
 from core.order import Order
 from core.order import Side
 from sortedcontainers import SortedDict
+import uuid
 
 class OrderBook:
 
     def __init__(self):
         self.bids = SortedDict(lambda price: -price) #order by price desc
         self.asks = SortedDict()
+        self.lookup = {}
+    
+    def get_order_by_id(self, id: uuid.UUID):
+        return self.lookup.get(id, None)
     
     def add_order(self, order: Order):
+        self.lookup[order.id] = order
+
         if order.side == Side.BUY:
             self.bids.setdefault(order.price, []).append(order)
         else:
             self.asks.setdefault(order.price, []).append(order)
 
     def cancel_order(self, order: Order):
+        del self.lookup[order.id]
+
         if order.side == Side.BUY:
             bid_price = self.bids[order.price] 
             bid_price.remove(order)
