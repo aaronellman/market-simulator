@@ -63,4 +63,4 @@ class MatchingEngine():
             opposing_orders = self.order_book.bids
             best_price = self.order_book.best_bid
 
-        self._match_order(order, best_price, opposing_orders)
+        return self._match_order(order, best_price, opposing_orders)
