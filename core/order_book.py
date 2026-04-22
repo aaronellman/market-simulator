@@ -48,3 +48,14 @@ class OrderBook:
             return None
 
         return self.asks.peekitem(0)[0]
+    
+    def format_price_levels(self, orders: SortedDict):
+        result = []
+        
+        for price in orders:
+            orders_at_price = orders[price]
+            quantity_at_price = sum(order.quantity for order in orders_at_price)
+            
+            result.append({"price": price, "quantity": quantity_at_price})
+            
+        return result

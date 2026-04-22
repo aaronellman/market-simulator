@@ -13,6 +13,14 @@ class OrderModel(BaseModel):
     side: Side
     symbol: str
 
+class PriceLevelModel(BaseModel):
+    price: float
+    quantity: int
+
+class OrderBookResponse(BaseModel):
+    asks: list[PriceLevelModel]
+    bids: list[PriceLevelModel]
+
 order_book = OrderBook()
 matching_engine = MatchingEngine(order_book)
 
@@ -34,3 +42,14 @@ def orders(order_id: uuid.UUID, matching_engine = Depends(get_matching_engine)):
     
     matching_engine.order_book.cancel_order(order)
     return {"message": "order cancelled"}
+
+@router.get("/orderbook", status_code=200, response_model=OrderBookResponse)
+def orders(matching_engine = Depends(get_matching_engine)):
+    response = {}
+    bids = matching_engine.order_book.bids
+    asks = matching_engine.order_book.asks
+    
+    response["bids"] = matching_engine.order_book.format_price_levels(bids)
+    response["asks"] = matching_engine.order_book.format_price_levels(asks)
+
+    return response
