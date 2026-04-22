@@ -1,6 +1,7 @@
 from core.order_book import OrderBook
 from core.order import Order
 from core.order import Side
+from core.trade import Trade
 from sortedcontainers import SortedDict
 from typing import Callable
 
@@ -9,48 +10,52 @@ class MatchingEngine():
     def __init__(self,order_book: OrderBook):
         self.order_book = order_book
 
-    def _match_order(self, order: Order, best_price_func: Callable[[], float | None], orders: SortedDict) -> bool:
+    def _match_order(self, order: Order, best_price_func: Callable[[], float | None], orders: SortedDict) -> list[Trade]:
+        trades = []
+
         while order.quantity > 0:
             best_price = best_price_func()
 
             if not best_price:
                 self.order_book.add_order(order)
-                return False
+                return []
             
             if order.side == Side.BUY:
                 
                 if best_price <= order.price:
                     opposing_order = orders[best_price][0]
-
-                    if order.quantity >= opposing_order.quantity:
-                
-                        order.quantity -= opposing_order.quantity
+                    
+                    trade_quantity = min(order.quantity, opposing_order.quantity)
+                    order.quantity -= trade_quantity
+                    opposing_order.quantity -= trade_quantity 
+                    
+                    if opposing_order.quantity == 0:
                         self.order_book.cancel_order(opposing_order)
-                    elif opposing_order.quantity > order.quantity:
-                        
-                        opposing_order.quantity -= order.quantity
-                        break
+
+                    trade = Trade(order.symbol, best_price, trade_quantity, order.id, opposing_order.id)
+                    trades.append(trade)
                 else:
                     self.order_book.add_order(order)
-                    return False
+                    return [] 
             else:
                 
                 if best_price >= order.price:
                     opposing_order = orders[best_price][0]
+                    
+                    trade_quantity = min(order.quantity, opposing_order.quantity)
+                    order.quantity -= trade_quantity
+                    opposing_order.quantity -= trade_quantity
 
-                    if order.quantity >= opposing_order.quantity:
-                
-                        order.quantity -= opposing_order.quantity
+                    if opposing_order.quantity == 0:
                         self.order_book.cancel_order(opposing_order)
-                    elif opposing_order.quantity > order.quantity:
-                        
-                        opposing_order.quantity -= order.quantity
-                        break
+
+                    trade = Trade(order.symbol, best_price, trade_quantity, opposing_order.id, order.id)
+                    trades.append(trade)
                 else:
                     self.order_book.add_order(order)
-                    return False
-        
-        return True
+                    return []  
+
+        return trades
 
     def match(self, order: Order):
         

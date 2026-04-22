@@ -68,7 +68,7 @@ def test_match_order_no_match():
 
     result = matching_engine._match_order(bid_order, order_book.best_ask, order_book.asks)
 
-    assert result is False
+    assert result == []
 
 
 def test_match_order_empty_book():
@@ -81,7 +81,7 @@ def test_match_order_empty_book():
 
     result = matching_engine._match_order(bid_order, order_book.best_ask, order_book.asks)
 
-    assert result is False
+    assert result == []
     assert price in order_book.bids
 
 
