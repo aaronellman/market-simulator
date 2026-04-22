@@ -66,3 +66,7 @@ def orders(matching_engine = Depends(get_matching_engine)):
     response["asks"] = matching_engine.order_book.format_price_levels(asks)
 
     return response
+
+@router.get("/trades")
+def trades():
+    return []
