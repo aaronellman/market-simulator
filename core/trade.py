@@ -10,4 +10,4 @@ class Trade:
     buyer_order_id: uuid.UUID 
     seller_order_id: uuid.UUID
     timestamp: datetime = field(default_factory=datetime.now)
-    id: uuid.UUID = field(default_factory=uuid.uuid4 )
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
