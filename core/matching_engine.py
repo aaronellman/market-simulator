@@ -4,11 +4,13 @@ from core.order import Side
 from core.trade import Trade
 from sortedcontainers import SortedDict
 from typing import Callable
+from db.repository import Repository
 
 class MatchingEngine():
     
-    def __init__(self,order_book: OrderBook):
+    def __init__(self,order_book: OrderBook, repository: Repository):
         self.order_book = order_book
+        self.repository = repository
 
     def _match_order(self, order: Order, best_price_func: Callable[[], float | None], orders: SortedDict) -> list[Trade]:
         trades = []
@@ -67,5 +69,10 @@ class MatchingEngine():
         else:
             opposing_orders = self.order_book.bids
             best_price = self.order_book.best_bid
+        
+        trades_made = self._match_order(order, best_price, opposing_orders)
 
-        return self._match_order(order, best_price, opposing_orders)
+        for trade in trades_made:
+            self.repository.save_trade(trade)
+
+        return trades_made
