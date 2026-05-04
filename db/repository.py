@@ -64,4 +64,18 @@ class Repository:
             result.append(trade)
         
         return result
+    
+    
+    def get_last_price(self, symbol: str) -> float | None:
+        sql = "SELECT price FROM trades WHERE symbol = %s ORDER BY created_at DESC LIMIT 1"
+
+        try:
+            self.cur.execute(sql, (symbol,))
+            result = self.cur.fetchone()
+        except Exception as e:
             
+            logger.error(e)
+            self.conn.rollback()
+            raise Exception(e)
+        
+        return float(result[0]) if result else None
