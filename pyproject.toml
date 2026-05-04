@@ -11,4 +11,5 @@ dependencies = [
     "pytest>=9.0.3",
     "python-dotenv>=1.2.2",
     "sortedcontainers>=2.4.0",
+    "uvicorn>=0.46.0",
 ]

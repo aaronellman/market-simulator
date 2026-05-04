@@ -11,13 +11,13 @@ class Repository:
 
     def __init__(self):
         load_dotenv()
-
         self.conn = psycopg2.connect(
             user=os.getenv("POSTGRES_USER"),
             password=os.getenv("POSTGRES_PASSWORD"),
             host=os.getenv("POSTGRES_HOST"),
             port=os.getenv("POSTGRES_PORT"),
-            database=os.getenv("POSTGRES_DB")
+            database=os.getenv("POSTGRES_DB"),
+            options='-c search_path=public'
         )
 
         self.cur = self.conn.cursor()
@@ -26,10 +26,16 @@ class Repository:
 
     def save_trade(self, trade: Trade):
         sql = "INSERT INTO trades (id, symbol, price, quantity, buyer_order_id, seller_order_id, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        values = (trade.id, trade.symbol, trade.price, trade.quantity, trade.buyer_order_id, trade.seller_order_id, trade.timestamp)
-        
-        self.cur.execute(sql,values)
-        self.conn.commit()
+        values = (str(trade.id), trade.symbol, trade.price, trade.quantity, str(trade.buyer_order_id), str(trade.seller_order_id), trade.timestamp)
+
+        try:
+            self.cur.execute(sql,values)
+            self.conn.commit()
+        except Exception as e:
+            
+            logger.error(e)
+            self.conn.rollback()
+            raise Exception(e)
 
 
     def get_trades(self, symbol: str | None) -> list[Trade]:
@@ -41,7 +47,14 @@ class Repository:
         else:
             self.cur.execute(sql)
 
-        rows = self.cur.fetchall()
+        try:
+            rows = self.cur.fetchall()
+        except Exception as e:
+            
+            logger.error(e)
+            self.conn.rollback()
+            raise Exception(e)
+        
         result = []
 
         for row in rows:
