@@ -138,3 +138,4 @@ When an order is placed it is matched against the opposite side of the book usin
 - [ ] Bot framework with random and market maker strategies
 - [ ] Load testing script - spin up N bots, log throughput metrics
 - [ ] Live leaderboard for bot performance
+- [ ] Index fund tracking top symbols by volume or criteria
