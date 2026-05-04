@@ -2,7 +2,7 @@
 
 A simulated financial exchange engine built in Python. Features a limit order book with price-time priority matching, a REST API, and a configurable bot framework for stress testing at scale.
 
-> **Status:** In active development - core matching engine and order book complete.
+> **Status:** In active development - bot framework with active decision making and bot number choice for load testing.
 
 ---
 
