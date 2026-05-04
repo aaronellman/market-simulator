@@ -3,7 +3,9 @@ from pydantic import BaseModel
 from core.order import Order, Side
 from core.order_book import OrderBook
 from core.matching_engine import MatchingEngine
+from db.repository import Repository
 import uuid
+from datetime import datetime
 
 
 router = APIRouter()
@@ -25,9 +27,19 @@ class OrderBookResponse(BaseModel):
     asks: list[PriceLevelModel]
     bids: list[PriceLevelModel]
 
+class TradeResponse(BaseModel):
+    symbol: str
+    price: float 
+    quantity: int 
+    buyer_order_id: uuid.UUID 
+    seller_order_id: uuid.UUID
+    timestamp: datetime
+    id: uuid.UUID
+
 
 order_book = OrderBook()
-matching_engine = MatchingEngine(order_book)
+repository = Repository()
+matching_engine = MatchingEngine(order_book, repository)
 
 
 def get_matching_engine():
@@ -67,6 +79,13 @@ def orders(matching_engine = Depends(get_matching_engine)):
 
     return response
 
-@router.get("/trades")
-def trades():
-    return []
+
+@router.get("/trades", status_code=200, response_model=list[TradeResponse])
+def trades(symbol: str | None = None, matching_engine = Depends(get_matching_engine)):
+
+    try:
+        result = matching_engine.repository.get_trades(symbol)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    return result
