@@ -27,6 +27,7 @@ class OrderBookResponse(BaseModel):
     asks: list[PriceLevelModel]
     bids: list[PriceLevelModel]
 
+
 class TradeResponse(BaseModel):
     symbol: str
     price: float 
@@ -69,7 +70,7 @@ def orders(order_id: uuid.UUID, matching_engine = Depends(get_matching_engine)):
 
 
 @router.get("/orderbook", status_code=200, response_model=OrderBookResponse)
-def orders(matching_engine = Depends(get_matching_engine)):
+def orderbook(matching_engine = Depends(get_matching_engine)):
     response = {}
     bids = matching_engine.order_book.bids
     asks = matching_engine.order_book.asks
