@@ -131,6 +131,10 @@ When an order is placed it is matched against the opposite side of the book usin
 
 ---
 
+## Known Technical Debt
+
+- `GET /orderbook` does not filter by symbol, will need updating when multiple instruments are supported
+
 ## Roadmap
 
 - [ ] REST API endpoints
