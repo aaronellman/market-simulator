@@ -134,6 +134,7 @@ When an order is placed it is matched against the opposite side of the book usin
 ## Known Technical Debt
 
 - `GET /orderbook` does not filter by symbol, will need updating when multiple instruments are supported
+- Bots that place resting orders have no way to know when they are filled - polling `GET /trades` by order ID is the planned solution
 
 ## Roadmap
 
