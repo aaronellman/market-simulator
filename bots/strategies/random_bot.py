@@ -8,12 +8,8 @@ from asyncio import sleep
 class RandomBot(BaseBot):
     """creates and starts up a bot that randomly picks a stock, and chooses whether to buy or sell it"""
 
-    def __init__(self, base_api_url: str):
+    def __init__(self):
         super().__init__()
-        self.base_api_url = base_api_url
-        self.orders_url = f"{self.base_api_url}/orders"
-        self.symbols_url = f"{self.base_api_url}/symbols"
-        self.order_book_url = f"{self.base_api_url}/orderbook"
 
 
     @staticmethod
