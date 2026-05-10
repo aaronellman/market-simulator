@@ -1,5 +1,5 @@
 from fastapi import Depends, APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from core.order import Order, Side
 from core.order_book import OrderBook
 from core.matching_engine import MatchingEngine
@@ -7,6 +7,7 @@ from db.repository import Repository
 import uuid
 from datetime import datetime
 
+SYMBOLS = {"AAPL", "TSLA", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "NFLX"}
 
 router = APIRouter()
 
@@ -16,6 +17,14 @@ class OrderModel(BaseModel):
     quantity: int
     side: Side
     symbol: str
+    
+    
+    @field_validator("symbol")
+    def validate_symbol(cls, v):
+        if v in SYMBOLS:
+            return v
+        else:
+            raise ValueError(f"Invalid Symbol {v} in order, use a symbol from GET /symbols")
 
 
 class PriceLevelModel(BaseModel):
@@ -90,3 +99,7 @@ def trades(symbol: str | None = None, matching_engine = Depends(get_matching_eng
         raise HTTPException(status_code=500, detail=str(e))
     
     return result
+
+@router.get("/symbols", status_code=200)
+def symbols():
+    return list(SYMBOLS)
