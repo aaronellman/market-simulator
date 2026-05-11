@@ -60,7 +60,7 @@ def get_matching_engine():
 @router.post("/orders", status_code=201)
 def orders(order_data: OrderModel, matching_engine = Depends(get_matching_engine)):
     order = Order(**order_data.model_dump())
-    logger.warning(order_data.model_dump())
+    logger.info(order_data.model_dump())
     try:
         result = matching_engine.match(order)
     except Exception as e:
