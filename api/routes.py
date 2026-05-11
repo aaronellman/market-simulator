@@ -6,18 +6,19 @@ from core.matching_engine import MatchingEngine
 from db.repository import Repository
 import uuid
 from datetime import datetime
+from logging import Logger
 
 SYMBOLS = {"AAPL", "TSLA", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "NFLX"}
+logger = Logger(__name__)
 
 router = APIRouter()
-
 
 class OrderModel(BaseModel):
     price: float
     quantity: int
     side: Side
     symbol: str
-    
+
     
     @field_validator("symbol")
     def validate_symbol(cls, v):
@@ -59,7 +60,7 @@ def get_matching_engine():
 @router.post("/orders", status_code=201)
 def orders(order_data: OrderModel, matching_engine = Depends(get_matching_engine)):
     order = Order(**order_data.model_dump())
-    
+    logger.warning(order_data.model_dump())
     try:
         result = matching_engine.match(order)
     except Exception as e:
