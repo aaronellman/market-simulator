@@ -6,10 +6,10 @@ from core.matching_engine import MatchingEngine
 from db.repository import Repository
 import uuid
 from datetime import datetime
-from logging import Logger
+import logging
 
 SYMBOLS = {"AAPL", "TSLA", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "NFLX"}
-logger = Logger(__name__)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
