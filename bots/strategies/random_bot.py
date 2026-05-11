@@ -25,7 +25,7 @@ class RandomBot(BaseBot):
     
 
     def _get_random_price(self):
-        return round(uniform(0.01, self.balance))
+        return round(uniform(0.01, self.balance), 2)
 
 
     def _get_random_side(self):
@@ -35,6 +35,7 @@ class RandomBot(BaseBot):
     async def run(self):
         async with AsyncClient() as client:
             while True:
+                await sleep(self.interval)
 
                 response = await client.get(self.symbols_url)
                 symbols = response.json()
@@ -54,20 +55,14 @@ class RandomBot(BaseBot):
                     price = self._get_random_price()
                     side = self._get_random_side()
                     quantity = self._get_trade_quantity(price, side, symbol)
-                    if quantity == 0:
-                        continue
                 elif ask_price is None:
                     price = self._get_random_price()
                     side = Side.SELL
                     quantity = self._get_trade_quantity(price, side, symbol)
-                    if quantity == 0:
-                        continue
                 elif bid_price is None:
                     price = self._get_random_price()
                     side = Side.BUY
                     quantity = self._get_trade_quantity(price, side, symbol)
-                    if quantity == 0:
-                        continue
                 else:
 
                     if self.balance > 0 and self.portfolio.get(symbol) == 0: #have to buy, only balance
@@ -83,11 +78,12 @@ class RandomBot(BaseBot):
                         price = ask_price if side == Side.BUY else bid_price
                         quantity = self._get_trade_quantity(price, side, symbol)
 
+                if quantity == 0:
+                    continue
+
                 query_params = {"price": price, "quantity": quantity, "side": side.value, "symbol": symbol}
                 response = await client.post(self.orders_url, json=query_params)
 
                 if response.json().get("matched") != []:
                     self._update_state(symbol, quantity, side, price)
-
-                await sleep(self.interval)
                 
