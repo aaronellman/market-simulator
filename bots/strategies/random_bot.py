@@ -16,6 +16,11 @@ class RandomBot(BaseBot):
     def _get_random_symbol(symbols: list[str]) -> str:
         return choice(symbols)
     
+    @staticmethod
+    def _add_price_noise(price):
+        noise_multiplier = uniform(-0.05, 0.05)
+        return round((1 + noise_multiplier) * price, 2)
+    
     
     def _get_trade_quantity(self, price: float, side: Side, symbol):
         if side == Side.BUY:
@@ -81,7 +86,7 @@ class RandomBot(BaseBot):
                 if quantity == 0:
                     continue
 
-                query_params = {"price": price, "quantity": quantity, "side": side.value, "symbol": symbol}
+                query_params = {"price": self._add_price_noise(price), "quantity": quantity, "side": side.value, "symbol": symbol}
                 response = await client.post(self.orders_url, json=query_params)
 
                 if response.json().get("matched") != []:
