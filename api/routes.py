@@ -69,13 +69,15 @@ def create_order(order_data: OrderModel, matching_engine = Depends(get_matching_
     return {"order_id":order.id, "matched": result, "timestamp": order.timestamp}
 
 
-@router.get("/orders/{order_id}", status_code=200)
-def get_order_by_id(order_id: uuid.UUID, matching_engine = Depends(get_matching_engine)):
-    order = matching_engine.order_book.get_order_by_id(order_id)
-    if order is None:
-        raise HTTPException(status_code=404, detail="order not found")
+@router.get("/orders", status_code=200)
+def get_orders_by_ids(order_ids: list[uuid.UUID], matching_engine = Depends(get_matching_engine)):
+    orders = []
+    for id in order_ids:
+        order = matching_engine.order_book.get_order_by_id(id)
+        if order is not None:
+            orders.append(order)
     
-    return {"message": "Order Found", "order": order}
+    return {"orders": orders}
 
 
 @router.delete("/orders/{order_id}", status_code=200)
