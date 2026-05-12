@@ -58,7 +58,7 @@ def get_matching_engine():
 
 
 @router.post("/orders", status_code=201)
-def orders(order_data: OrderModel, matching_engine = Depends(get_matching_engine)):
+def create_order(order_data: OrderModel, matching_engine = Depends(get_matching_engine)):
     order = Order(**order_data.model_dump())
     logger.info(order_data.model_dump())
     try:
@@ -66,11 +66,20 @@ def orders(order_data: OrderModel, matching_engine = Depends(get_matching_engine
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-    return {"matched": result, "timestamp": order.timestamp}
+    return {"order_id":order.id, "matched": result, "timestamp": order.timestamp}
+
+
+@router.get("/orders/{order_id}", status_code=200)
+def get_order_by_id(order_id: uuid.UUID, matching_engine = Depends(get_matching_engine)):
+    order = matching_engine.order_book.get_order_by_id(order_id)
+    if order is None:
+        raise HTTPException(status_code=404, detail="order not found")
+    
+    return {"message": "Order Found", "order": order}
 
 
 @router.delete("/orders/{order_id}", status_code=200)
-def orders(order_id: uuid.UUID, matching_engine = Depends(get_matching_engine)):
+def delete_order_by_id(order_id: uuid.UUID, matching_engine = Depends(get_matching_engine)):
     order = matching_engine.order_book.get_order_by_id(order_id)
     if order is None:
         raise HTTPException(status_code=404, detail="order not found")
