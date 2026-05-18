@@ -88,7 +88,13 @@ class RandomBot(BaseBot):
 
                 query_params = {"price": self._add_price_noise(price), "quantity": quantity, "side": side.value, "symbol": symbol}
                 response = await client.post(self.orders_url, json=query_params)
-
-                if response.json().get("matched") != []:
+                data = response.json()
+                
+                if response.status_code == 201:
+                    self.pending_orders.append({"id": data.get("order_id"), "price": query_params["price"], "quantity": quantity, "side": side.value, "symbol": symbol})
+                    
+                if data["matched"]:
                     self._update_state(symbol, quantity, side, price)
+
+                await self._poll_orders()
                 

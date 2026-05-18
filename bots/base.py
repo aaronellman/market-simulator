@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from time import sleep
+from httpx import AsyncClient
 from core.order import Side
 
 class BaseBot(ABC):
@@ -8,6 +8,7 @@ class BaseBot(ABC):
         self.balance = balance
         self.portfolio: dict[str, int] = {}
         self.interval = interval
+        self.pending_orders: list[dict] = []
 
         self.base_api_url = base_api_url
         self.orders_url = f"{self.base_api_url}/orders"
@@ -25,3 +26,29 @@ class BaseBot(ABC):
         else:
             self.portfolio[symbol] = self.portfolio.get(symbol) - quantity
             self.balance += price * quantity
+
+    async def _poll_orders(self):
+        
+        if not self.pending_orders:
+            return
+
+        async with AsyncClient() as client:
+            response = await client.get(f"{self.orders_url}", params={"order_ids": [order["id"] for order in self.pending_orders]})
+            data = response.json()
+            order_dict = {order["id"]: order for order in data["orders"]}
+
+            for order in self.pending_orders.copy():
+                symbol = order.get("symbol")
+                side = Side(order.get("side"))
+                price = order.get("price")
+
+                if order_dict.get(order["id"], None) == None:
+                    self.pending_orders.remove(order)
+                    
+                    self._update_state(symbol, order.get("quantity"), side, price)
+                else:
+                    traded_amount = order["quantity"] - order_dict[order["id"]]["quantity"]
+                    
+                    if traded_amount > 0:
+                        order["quantity"] = order["quantity"] - traded_amount
+                        self._update_state(symbol, traded_amount, side, price)
