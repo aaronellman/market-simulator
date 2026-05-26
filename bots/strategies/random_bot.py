@@ -87,14 +87,25 @@ class RandomBot(BaseBot):
                     continue
 
                 query_params = {"price": self._add_price_noise(price), "quantity": quantity, "side": side.value, "symbol": symbol}
+                print([order["id"] for order in self.pending_orders])
                 response = await client.post(self.orders_url, json=query_params)
                 data = response.json()
+                print(data)
+                print(response.status_code)
                 
-                if response.status_code == 201:
+                trades_made = data.get("matched")
+                quantity_traded = sum(trade["quantity"] for trade in trades_made)
+
+                if response.status_code == 201 and  quantity_traded < quantity:
+                    quantity = quantity - quantity_traded
+
                     self.pending_orders.append({"id": data.get("order_id"), "price": query_params["price"], "quantity": quantity, "side": side.value, "symbol": symbol})
                     
+                print(self.pending_orders)
                 if data["matched"]:
-                    self._update_state(symbol, quantity, side, price)
+                    self._update_state(symbol, quantity_traded, side, price)
+
+                print(f"Balance: {self.balance} Portfolio: {self.portfolio}")
 
                 await self._poll_orders()
                 

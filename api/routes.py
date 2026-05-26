@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException, Query
 from pydantic import BaseModel, field_validator
 from core.order import Order, Side
 from core.order_book import OrderBook
@@ -70,7 +70,7 @@ def create_order(order_data: OrderModel, matching_engine = Depends(get_matching_
 
 
 @router.get("/orders", status_code=200)
-def get_orders_by_ids(order_ids: list[uuid.UUID], matching_engine = Depends(get_matching_engine)):
+def get_orders_by_ids(order_ids: list[uuid.UUID] = Query(default=[]), matching_engine = Depends(get_matching_engine)):
     orders = []
     for id in order_ids:
         order = matching_engine.order_book.get_order_by_id(id)
