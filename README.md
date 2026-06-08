@@ -53,7 +53,6 @@ market-simulator/
 ├── .env.example            # Required environment variables
 ├── docker-compose.yml      # PostgreSQL container
 ├── pyproject.toml
-├── requirements.txt
 └── README.md
 ```
 
@@ -74,12 +73,12 @@ git clone https://github.com/aaronellman/market-simulator
 cd market-simulator
 
 # Create and activate virtual environment
-python -m venv .venv
+uv venv
 .venv\Scripts\activate  # Windows
 source .venv/bin/activate  # macOS/Linux
 
 # Install dependencies
-pip install -r requirements.txt
+uv sync
 
 # Copy environment variables
 cp .env.example .env
@@ -91,6 +90,22 @@ docker compose up -d
 # Run the API
 uvicorn api.main:app --reload
 ```
+
+### Running Bots
+
+In a separate terminal (with the API running), start bots using:
+
+```bash
+python -m bots.run <count> <strategy> [--interval <seconds>] [--starting-balance <float>]
+```
+
+Example - 3 random bots, trading every 2 seconds with a starting balance of 500:
+
+```bash
+python -m bots.run 3 random --interval 2 --starting-balance 500
+```
+
+Available strategies: `random`
 
 ### Running Tests
 
@@ -134,13 +149,14 @@ When an order is placed it is matched against the opposite side of the book usin
 ## Known Technical Debt
 
 - `GET /orderbook` does not filter by symbol, will need updating when multiple instruments are supported
-- Bots that place resting orders have no way to know when they are filled - polling `GET /trades` by order ID is the planned solution
+- Fractional shares not yet supported - bots with low balances may stall if they cannot afford a whole unit
 
 ## Roadmap
 
 - [ ] REST API endpoints
 - [ ] PostgreSQL trade persistence
-- [ ] Bot framework with random and market maker strategies
+- [x] Bot framework with random strategy
+- [ ] Market maker bot strategy
 - [ ] Load testing script - spin up N bots, log throughput metrics
 - [ ] Live leaderboard for bot performance
 - [ ] Index fund tracking top symbols by volume or criteria
