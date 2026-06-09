@@ -23,10 +23,14 @@ class RandomBot(BaseBot):
     
     
     def _get_trade_quantity(self, price: float, side: Side, symbol):
+
         if side == Side.BUY:
-            return self.balance // price 
+            pending_buy_cost = sum(o["quantity"] * o["price"] for o in self.pending_orders if o["side"] == Side.BUY.value)
+            return (self.balance - pending_buy_cost) // price 
         else:
-            return self.portfolio.get(symbol, 0)
+            pending_sell_qty = sum(o["quantity"] for o in self.pending_orders if o["side"] == Side.SELL.value and o["symbol"] == symbol)
+            
+            return self.portfolio.get(symbol, 0) - pending_sell_qty
     
 
     def _get_random_price(self):
@@ -87,25 +91,24 @@ class RandomBot(BaseBot):
                     continue
 
                 query_params = {"price": self._add_price_noise(price), "quantity": quantity, "side": side.value, "symbol": symbol}
-                print([order["id"] for order in self.pending_orders])
+                print(f"[{self.bot_id}] pending: {[order['id'] for order in self.pending_orders]}")
                 response = await client.post(self.orders_url, json=query_params)
                 data = response.json()
-                print(data)
-                print(response.status_code)
-                
+                print(f"[{self.bot_id}] response: {data}")
+                print(f"[{self.bot_id}] status: {response.status_code}")
+
                 trades_made = data.get("matched")
                 quantity_traded = sum(trade["quantity"] for trade in trades_made)
 
-                if response.status_code == 201 and  quantity_traded < quantity:
+                if response.status_code == 201 and quantity_traded < quantity:
                     quantity = quantity - quantity_traded
-
                     self.pending_orders.append({"id": data.get("order_id"), "price": query_params["price"], "quantity": quantity, "side": side.value, "symbol": symbol})
-                    
-                print(self.pending_orders)
+
+                print(f"[{self.bot_id}] pending after: {self.pending_orders}")
                 if data["matched"]:
                     self._update_state(symbol, quantity_traded, side, price)
 
-                print(f"Balance: {self.balance} Portfolio: {self.portfolio}")
+                print(f"[{self.bot_id}] balance: {self.balance} portfolio: {self.portfolio}")
 
                 await self._poll_orders()
                 
