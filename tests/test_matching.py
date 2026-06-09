@@ -2,11 +2,12 @@ from core.order_book import OrderBook
 from core.order import Order
 from core.order import Side
 from core.matching_engine import MatchingEngine
+from db.repository import Repository
 
 
 def test_match_order_bid_quantity_greater_than_ask():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     price = 100.0
 
@@ -24,7 +25,7 @@ def test_match_order_bid_quantity_greater_than_ask():
 
 def test_match_order_bid_quantity_less_than_ask():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     price = 100.0
 
@@ -42,7 +43,7 @@ def test_match_order_bid_quantity_less_than_ask():
 
 def test_match_order_bid_quantity_equals_ask():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     price = 100.0
 
@@ -59,7 +60,7 @@ def test_match_order_bid_quantity_equals_ask():
 
 def test_match_order_no_match():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     bid_order = Order(price=80,side=Side.BUY, quantity=100, symbol="TEST")
     ask_order = Order(price=100,side=Side.SELL, quantity=100, symbol="TEST")
@@ -73,7 +74,7 @@ def test_match_order_no_match():
 
 def test_match_order_empty_book():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     price = 80
 
@@ -87,7 +88,7 @@ def test_match_order_empty_book():
 
 def test_match_order_ask_quantity_equals_bid():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     price = 100.0
 
@@ -104,7 +105,7 @@ def test_match_order_ask_quantity_equals_bid():
 
 def test_match_bid_equals_ask():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     price = 100.0
 
@@ -121,7 +122,7 @@ def test_match_bid_equals_ask():
 
 def test_match_ask_equals_bid():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     price = 100.0
 

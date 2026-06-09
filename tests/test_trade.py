@@ -1,10 +1,11 @@
 from core.order_book import OrderBook
 from core.order import Order, Side
 from core.matching_engine import MatchingEngine
+from db.repository import Repository
 
 def test_trade_created_bid_quantity_eqals_ask():
     order_book = OrderBook()
-    matching_engine = MatchingEngine(order_book)
+    matching_engine = MatchingEngine(order_book, Repository())
 
     quantity = 100
     bid_order = Order(price=100,side=Side.BUY, quantity=quantity, symbol="TEST")
