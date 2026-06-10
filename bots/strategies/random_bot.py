@@ -16,6 +16,7 @@ class RandomBot(BaseBot):
     def _get_random_symbol(symbols: list[str]) -> str:
         return choice(symbols)
     
+    
     @staticmethod
     def _add_price_noise(price):
         noise_multiplier = uniform(-0.05, 0.05)

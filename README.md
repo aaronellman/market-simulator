@@ -12,8 +12,8 @@ A simulated financial exchange engine built in Python. Features a limit order bo
 - **Matching engine** - partial fills supported, walks the book until the incoming order is fully filled or no match is possible
 - **Multiple instruments** - each symbol maintains its own independent order book
 - **REST API** - place orders, cancel orders, query the order book and trade history *(in progress)*
-- **Bot framework** - configurable bots with pluggable strategies *(planned)*
-- **Trade persistence** - full trade history stored in PostgreSQL *(planned)*
+- **Bot framework** - configurable bots with pluggable strategies
+- **Trade persistence** - full trade history stored in PostgreSQL
 - **Load testing** - spin up N bots and observe throughput metrics in real time *(planned)*
 
 ---
@@ -149,7 +149,6 @@ When an order is placed it is matched against the opposite side of the book usin
 ## Known Technical Debt
 
 - `GET /orderbook` does not filter by symbol, will need updating when multiple instruments are supported
-- Fractional shares not yet supported - bots with low balances may stall if they cannot afford a whole unit
 
 ## Roadmap
 
