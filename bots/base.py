@@ -24,10 +24,10 @@ class BaseBot(ABC):
     def _update_state(self, symbol: str, quantity: int, side: Side, price: float) -> None:
         if side == Side.BUY:
             self.portfolio[symbol] = self.portfolio.get(symbol, 0) + quantity
-            self.balance -= price * quantity
+            self.balance = round(self.balance - price * quantity, 2)
         else:
             self.portfolio[symbol] = self.portfolio.get(symbol) - quantity
-            self.balance += price * quantity
+            self.balance = round(self.balance + price * quantity, 2)
 
     async def _poll_orders(self):
         
