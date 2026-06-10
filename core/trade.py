@@ -6,7 +6,7 @@ import uuid
 class Trade:
     symbol: str
     price: float 
-    quantity: int 
+    quantity: float
     buyer_order_id: uuid.UUID 
     seller_order_id: uuid.UUID
     timestamp: datetime = field(default_factory=datetime.now)

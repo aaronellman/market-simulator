@@ -26,7 +26,7 @@ class RandomBot(BaseBot):
 
         if side == Side.BUY:
             pending_buy_cost = sum(o["quantity"] * o["price"] for o in self.pending_orders if o["side"] == Side.BUY.value)
-            return (self.balance - pending_buy_cost) // price 
+            return round((self.balance - pending_buy_cost) / price, 2)
         else:
             pending_sell_qty = sum(o["quantity"] for o in self.pending_orders if o["side"] == Side.SELL.value and o["symbol"] == symbol)
             

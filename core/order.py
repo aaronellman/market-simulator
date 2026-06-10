@@ -11,7 +11,7 @@ class Side(Enum):
 @dataclass(order=True, slots=True)
 class Order:
     price: float
-    quantity: int #no fractional buy/sell orders
+    quantity: float
     side: Side
     symbol: str
     timestamp: datetime = field(default_factory=datetime.now)
