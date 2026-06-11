@@ -5,7 +5,7 @@ import uuid
 
 class BaseBot(ABC):
 
-    def __init__(self, balance: float = 1000.00, base_api_url: str = "http://127.0.0.1:8000", interval: int = 1):
+    def __init__(self, balance: float = 10000.00, base_api_url: str = "http://127.0.0.1:8000", interval: int = 1):
         self.bot_id = str(uuid.uuid4())[:8]
         self.balance = balance
         self.portfolio: dict[str, float] = {}
