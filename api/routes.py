@@ -15,7 +15,7 @@ router = APIRouter()
 
 class OrderModel(BaseModel):
     price: float
-    quantity: int
+    quantity: float
     side: Side
     symbol: str
 
@@ -30,7 +30,7 @@ class OrderModel(BaseModel):
 
 class PriceLevelModel(BaseModel):
     price: float
-    quantity: int
+    quantity: float
 
 
 class OrderBookResponse(BaseModel):
@@ -40,8 +40,8 @@ class OrderBookResponse(BaseModel):
 
 class TradeResponse(BaseModel):
     symbol: str
-    price: float 
-    quantity: int 
+    price: float
+    quantity: float
     buyer_order_id: uuid.UUID 
     seller_order_id: uuid.UUID
     timestamp: datetime
