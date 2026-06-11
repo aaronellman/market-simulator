@@ -152,8 +152,8 @@ When an order is placed it is matched against the opposite side of the book usin
 
 ## Roadmap
 
-- [ ] REST API endpoints
-- [ ] PostgreSQL trade persistence
+- [x] REST API endpoints
+- [x] PostgreSQL trade persistence
 - [x] Bot framework with random strategy
 - [ ] Market maker bot strategy
 - [ ] Load testing script - spin up N bots, log throughput metrics
