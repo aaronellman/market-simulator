@@ -8,7 +8,7 @@ from asyncio import sleep
 class RandomBot(BaseBot):
     """creates and starts up a bot that randomly picks a stock, and chooses whether to buy or sell it"""
 
-    def __init__(self, balance: float = 1000.00, base_api_url: str = "http://127.0.0.1:8000", interval: int = 1):
+    def __init__(self, balance: float = 10000.00, base_api_url: str = "http://127.0.0.1:8000", interval: int = 1):
         super().__init__(balance, base_api_url, interval)
 
 
