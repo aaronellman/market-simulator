@@ -89,6 +89,10 @@ class RandomBot(BaseBot):
                         quantity = self._get_trade_quantity(price, side, symbol)
 
                 if quantity == 0:
+
+                    #polling to eliminate cancellation of past orders preventing missed fills
+                    await self._poll_orders() 
+                    await self._cancel_pending_orders()
                     continue
 
                 query_params = {"price": self._add_price_noise(price), "quantity": quantity, "side": side.value, "symbol": symbol}
