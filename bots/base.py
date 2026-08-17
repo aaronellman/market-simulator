@@ -54,3 +54,22 @@ class BaseBot(ABC):
                     if traded_amount > 0:
                         order["quantity"] = order["quantity"] - traded_amount
                         self._update_state(symbol, traded_amount, side, price)
+
+    async def _cancel_pending_orders(self):
+        
+        if not self.pending_orders:
+            return None
+        
+        orders_to_remove = []
+        order_ids = [o["id"] for o in self.pending_orders]
+        
+        async with AsyncClient() as client:
+            for id in order_ids:
+                response = await client.delete(f"{self.orders_url}/{id}")
+                
+                if response.status_code == 200:
+                    orders_to_remove.append(id)
+            
+            self.pending_orders = [o for o in self.pending_orders if o["id"] not in orders_to_remove]
+
+            return orders_to_remove

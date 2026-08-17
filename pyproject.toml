@@ -12,6 +12,7 @@ dependencies = [
     "pydantic>=2.13.2",
     "pytest>=9.0.3",
     "python-dotenv>=1.2.2",
+    "respx>=0.23.1",
     "sortedcontainers>=2.4.0",
     "typer>=0.25.1",
     "uvicorn>=0.46.0",
