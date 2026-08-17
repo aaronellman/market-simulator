@@ -9,12 +9,13 @@ def test_get_trade_quantity_buy():
     
     #assert for without pending orders
     bot = RandomBot()
-    assert bot._get_trade_quantity(100.00, Side.BUY, "TSLA") == 10.00
+    starting_balance = bot.balance
+    assert bot._get_trade_quantity(100.00, Side.BUY, "TSLA") == starting_balance / 100.00
 
     #assert for with pending orders
     bot.pending_orders.append({"id": "abc123", "price": 100.0, "quantity": 5, "side": "BUY", "symbol": "AAPL"})
 
-    assert bot._get_trade_quantity(100.00, Side.BUY, "TSLA") == 5.00
+    assert bot._get_trade_quantity(100.00, Side.BUY, "TSLA") == (starting_balance - 500) / 100.00
 
 
 def test_get_trade_quantity_sell():
@@ -47,19 +48,21 @@ def test_get_trade_quantity_sell_with_pending_other_symbol():
 
 def test_update_state_buy():
     bot = RandomBot()
+    starting_balance = bot.balance
     bot._update_state("TSLA", 5, Side.BUY, 100.00)
 
-    assert bot.balance == 500.00
+    assert bot.balance == starting_balance - 500.00
     assert bot.portfolio["TSLA"] == 5
 
 
 def test_update_state_sell():
     bot = RandomBot()
+    starting_balance = bot.balance
     bot.portfolio["TSLA"] = 5
     bot._update_state("TSLA", 3, Side.SELL, 100.00)
 
     assert bot.portfolio["TSLA"] == 2
-    assert bot.balance == 1300
+    assert bot.balance == starting_balance + 300.00
 
 
 def test_bot_portfolio_recovery(respx_mock):
