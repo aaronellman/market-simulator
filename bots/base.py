@@ -73,3 +73,24 @@ class BaseBot(ABC):
             self.pending_orders = [o for o in self.pending_orders if o["id"] not in orders_to_remove]
 
             return orders_to_remove
+
+    async def _place_order(self, client, price: float, quantity: float, side: Side, symbol: str):
+
+        query_params = {"price": price, "quantity": quantity, "side": side.value, "symbol": symbol}
+        response = await client.post(self.orders_url, json=query_params)
+
+        data = response.json()
+        order_id = data.get("order_id")
+        trades_made = data.get("matched")
+
+        order = query_params.copy()
+        order["id"] = order_id
+
+        if response.status_code == 201:
+            quantity_traded = sum(trade["quantity"] for trade in trades_made)
+            order["quantity"] = quantity - quantity_traded
+
+            if data["matched"]:
+                self._update_state(symbol, quantity_traded, side, price) 
+            if quantity_traded < quantity:
+                self.pending_orders.append(order)
