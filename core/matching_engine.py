@@ -28,9 +28,9 @@ class MatchingEngine():
                     opposing_order = orders[best_price][0]
                     
                     trade_quantity = min(order.quantity, opposing_order.quantity)
-                    order.quantity -= trade_quantity
-                    opposing_order.quantity -= trade_quantity 
-                    
+                    order.quantity = round(order.quantity - trade_quantity, 8)
+                    opposing_order.quantity = round(opposing_order.quantity - trade_quantity, 8)
+
                     if opposing_order.quantity == 0:
                         self.order_book.cancel_order(opposing_order)
 
@@ -45,8 +45,8 @@ class MatchingEngine():
                     opposing_order = orders[best_price][0]
                     
                     trade_quantity = min(order.quantity, opposing_order.quantity)
-                    order.quantity -= trade_quantity
-                    opposing_order.quantity -= trade_quantity
+                    order.quantity = round(order.quantity - trade_quantity, 8)
+                    opposing_order.quantity = round(opposing_order.quantity - trade_quantity, 8)
 
                     if opposing_order.quantity == 0:
                         self.order_book.cancel_order(opposing_order)
