@@ -16,6 +16,7 @@ class BaseBot(ABC):
         self.orders_url = f"{self.base_api_url}/orders"
         self.symbols_url = f"{self.base_api_url}/symbols"
         self.order_book_url = f"{self.base_api_url}/orderbook"
+        self.trades_url = f"{self.base_api_url}/trades"
 
     @abstractmethod
     def run(self):
@@ -94,3 +95,13 @@ class BaseBot(ABC):
                 self._update_state(symbol, quantity_traded, side, price) 
             if quantity_traded < quantity:
                 self.pending_orders.append(order)
+
+    async def _get_last_price(self, client, symbol: str):
+
+        response = await client.get(f"{self.trades_url}/last", params={"symbol": symbol})
+        result = response.json()
+
+        if result is not None:
+            return result
+
+        return None 
