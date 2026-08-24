@@ -20,16 +20,17 @@ class Repository:
             options='-c search_path=public'
         )
 
-        self.cur = self.conn.cursor()
         logger.info("PostgreSQL connection is open")
 
 
     def save_trade(self, trade: Trade):
+        cur = self.conn.cursor()
+
         sql = "INSERT INTO trades (id, symbol, price, quantity, buyer_order_id, seller_order_id, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         values = (str(trade.id), trade.symbol, trade.price, trade.quantity, str(trade.buyer_order_id), str(trade.seller_order_id), trade.timestamp)
 
         try:
-            self.cur.execute(sql,values)
+            cur.execute(sql,values)
             self.conn.commit()
         except Exception as e:
             
@@ -39,16 +40,18 @@ class Repository:
 
 
     def get_trades(self, symbol: str | None) -> list[Trade]:
+        cur = self.conn.cursor()
         sql = "SELECT * FROM trades"
         
         if symbol:
             sql = "SELECT * FROM trades WHERE symbol = %s"
-            self.cur.execute(sql,(symbol,))
+            cur.execute(sql,(symbol,))
         else:
-            self.cur.execute(sql)
-
+            cur.execute(sql)
+        
         try:
-            rows = self.cur.fetchall()
+            rows = cur.fetchall()
+            self.conn.commit()
         except Exception as e:
             
             logger.error(e)
@@ -67,11 +70,13 @@ class Repository:
     
     
     def get_last_price(self, symbol: str) -> float | None:
+        cur = self.conn.cursor()
         sql = "SELECT price FROM trades WHERE symbol = %s ORDER BY created_at DESC LIMIT 1"
 
         try:
-            self.cur.execute(sql, (symbol,))
-            result = self.cur.fetchone()
+            cur.execute(sql, (symbol,))
+            result = cur.fetchone()
+            self.conn.commit()
         except Exception as e:
             
             logger.error(e)
