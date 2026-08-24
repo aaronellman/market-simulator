@@ -96,6 +96,9 @@ class RandomBot(BaseBot):
 
                 await self._place_order(client, price, quantity, side, symbol)
 
+                tnw = await self._get_total_net_worth(client)
+                print(f"[{self.bot_id}] TNW: {tnw}")
+                
                 print(f"[{self.bot_id}] pending after: {self.pending_orders}")
                 print(f"[{self.bot_id}] balance: {self.balance} portfolio: {self.portfolio}")
 
