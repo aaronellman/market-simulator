@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from httpx import AsyncClient
 from core.order import Side
 import uuid
+import asyncio
 
 class BaseBot(ABC):
 
@@ -104,4 +105,27 @@ class BaseBot(ABC):
             result = response.json()
             return result
 
-        return None 
+        return None
+
+
+    async def _get_total_net_worth(self, client) -> float | None:
+
+        result = 0.00
+        valid_portfolio = [symbol for symbol in self.portfolio if self.portfolio[symbol] > 0 ]
+        prices = []
+
+        quantities = [self.portfolio[symbol] for symbol in valid_portfolio]
+    
+        for symbol in valid_portfolio:
+            prices.append(self._get_last_price(client, symbol))
+
+        prices = await asyncio.gather(*prices)
+
+        if None in prices:
+            return None
+
+        for price, quantity in zip(prices, quantities):
+            result += price * quantity
+
+        result += self.balance
+        return round(result, 2)
