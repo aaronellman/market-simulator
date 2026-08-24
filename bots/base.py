@@ -99,9 +99,9 @@ class BaseBot(ABC):
     async def _get_last_price(self, client, symbol: str):
 
         response = await client.get(f"{self.trades_url}/last", params={"symbol": symbol})
-        result = response.json()
 
-        if result is not None:
+        if response.status_code == 200:
+            result = response.json()
             return result
 
         return None 
