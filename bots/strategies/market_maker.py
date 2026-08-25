@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from bots.base import BaseBot
 from httpx import AsyncClient
 from asyncio import sleep
+import asyncio
+from core.order import Side
 
 @dataclass()
 class MarketMakerConfig():
@@ -14,13 +16,33 @@ class MarketMakerConfig():
 
 class MarketMaker(BaseBot):
 
-    def __init__(self, config: MarketMakerConfig, balance: float = 10000.00, 
-                 base_api_url: str = "http://127.0.0.1:8000", interval: int = 1):
+    def __init__(self, balance: float = 10000.00, base_api_url: str = "http://127.0.0.1:8000", interval: int = 1, config: MarketMakerConfig = None):
+
+        if config is None:
+            config = MarketMakerConfig()
+
         self.config = config
         super().__init__(balance, base_api_url, interval)
 
-    async def _place_order(self, client, price, quantity, side, symbol):
-        response = await client.post()
+
+    @staticmethod
+    def _get_quantity_distribution(quantity) -> tuple:
+            """Determines the distribution of the quantity for each ladder level given N total quantity"""
+
+            #currently uses a 3:2:1 ratio from closest to furthest from mid
+            unit = quantity / 6
+            return (unit * 3, unit * 2, unit)
+
+    def _get_trade_quantity(self, price: float, side: Side, symbol: str):
+        if side == Side.BUY:
+            pending_buy_cost = sum(o["quantity"] * o["price"] for o in self.pending_orders if o["side"] == Side.BUY.value)
+
+            return round((self.balance - pending_buy_cost) / price, 8)
+        else:
+            pending_sell_qty = sum(o["quantity"] for o in self.pending_orders if o["side"] == Side.SELL.value and o["symbol"] == symbol)
+
+            return round(self.portfolio.get(symbol, 0) - pending_sell_qty, 8)
+
 
     async def run(self):
         """
