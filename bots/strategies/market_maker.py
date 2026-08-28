@@ -50,20 +50,34 @@ class MarketMaker(BaseBot):
         1. place orders at each ladder level with the quote quantity(prices are calculated from mid + (spread)/2 and mid - (spread)/2)
         2. when an order gets filled, recompute mid and recalculate ladder levels for both sides
         3. rebalancing stocks can be done by increasing the rung increment amount on that side to decrease chance of getting a hit on that side untill the target_stock ratio is hit again, then we would set it back to the normal spread.
-        """
-        #temporarily using only one stock for simplicity for now
+        """        
+
+        #temporarily using only one stock for simplicity
         SYMBOL = "TSLA"
+
 
         async with AsyncClient() as client:
             while True:
-                await sleep(self.interval)
 
+                await sleep(self.interval)
+                old_pending_orders = [order.copy() for order in self.pending_orders.copy()]
+                await self._poll_orders()
+
+                if old_pending_orders != self.pending_orders: 
+                    await self._cancel_pending_orders()
+                elif old_pending_orders == self.pending_orders and self.pending_orders != []:
+                    continue
+                    
                 prices = await client.get(self.order_book_url)
                 asks = prices.json()["asks"]
                 bids = prices.json()["bids"]
                 
                 ask_price = asks[0]["price"] if asks else None
                 bid_price = bids[0]["price"] if bids else None
+
+                if ask_price is None or bid_price is None:
+                    continue 
+
                 mid = (bid_price + ask_price) / 2
 
                 stock_value = self.portfolio.get(SYMBOL, 0) * mid
@@ -72,14 +86,44 @@ class MarketMaker(BaseBot):
                 deviation = self.config.target_stock_ratio - current_stock_ratio
                 skew = deviation * self.config.adjustment_rate
 
-                # +0.5 makes rung 1 sit a half-spread from mid, so the innermost bid/ask gap equals exactly one spread;
+                # +0.5 makes rung 1 sit a half-spread from mid, so the innermost bid/ask gap equals exactly one spread
                 # each further rung (i) then steps out by one more full spread.
                 bid_rungs = []
                 ask_rungs = []
                 if self.portfolio.get(SYMBOL, 0) > 0:
                     ask_rungs = [(1 + (i + 0.5) * self.config.spread + skew) * mid for i in range(self.config.ladder_levels)]
 
-                if ask_price and self.balance >= ask_price:
+                if self.balance >= ask_price:
                     bid_rungs = [(1 - (i + 0.5) * self.config.spread + skew) * mid for i in range(self.config.ladder_levels)]
 
-                
+                #trade distribution calculation for asks
+                trade_quantity = self._get_trade_quantity(mid, Side.SELL, SYMBOL)
+                sell_quantities = self._get_quantity_distribution(trade_quantity)
+                ask_orders = []
+                for ask in zip(ask_rungs, sell_quantities):
+                    price = ask[0]
+                    qty = ask[1]
+                    if qty <= 0:
+                        break
+                    ask_orders.append(self._place_order(client, price, qty, Side.SELL, SYMBOL))
+
+                await asyncio.gather(*ask_orders)
+
+                #bids
+                bid_targets = self._get_quantity_distribution(self.config.quote_quantity * self.config.ladder_levels)
+
+                #getting tradeable amounts at each price on first come, first serve basis
+                for bid in zip(bid_rungs, bid_targets):
+                    price = bid[0]
+                    target = bid[1]
+                    affordable = self._get_trade_quantity(price, Side.BUY, SYMBOL)
+                    if affordable <= 0:
+                        break
+                    qty = min(target, affordable)
+                    await self._place_order(client, price, qty, Side.BUY, SYMBOL) #placing orders after one another because each subsuquent one relies on the balance that the previous one leaves over
+
+                tnw = await self._get_total_net_worth(client)
+                print(f"[{self.bot_id}] TNW: {tnw}")
+
+                print(f"[{self.bot_id}] pending after: {self.pending_orders}")
+                print(f"[{self.bot_id}] balance: {self.balance} portfolio: {self.portfolio}")
