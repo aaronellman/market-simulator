@@ -1,7 +1,13 @@
 from typer import Typer
 from bots.strategies.random_bot import RandomBot
+from bots.strategies.market_maker import MarketMaker
 import asyncio
-strategies = {"random": RandomBot}
+
+
+strategies = {"random": RandomBot,
+              "rnd": RandomBot,
+              "market_maker": MarketMaker,
+              "mm": MarketMaker}
 
 
 app = Typer()
