@@ -20,7 +20,10 @@ class RandomBot(BaseBot):
     @staticmethod
     def _add_price_noise(price, scale: float = 1.0):
         max_noise = abs(0.05 * scale) #scalar value to adjust noise range
-        noise_multiplier = uniform(-1 * max_noise, max_noise)
+
+        #made for more symmetric spreads, skewing up by some more becuase when decreased it takes more to get back up.
+        up_skew = (max_noise / (1 - max_noise)) + 1 
+        noise_multiplier = uniform(-1 * max_noise, max_noise * up_skew)
         return round((1 + noise_multiplier) * price, 2)
     
     
