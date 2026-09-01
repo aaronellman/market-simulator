@@ -3,13 +3,23 @@ from core.order import Side
 import respx
 import httpx
 import asyncio
+from unittest.mock import patch
+import pytest
+
+@pytest.fixture
+def mock_betavariate():
+    """Always mocks the betavariate value as 1 enabling testing"""
+
+    with patch("bots.strategies.random_bot.betavariate", return_value=1.0) as mock_betavariate:
+        yield mock_betavariate
 
 
-def test_get_trade_quantity_buy():
+def test_get_trade_quantity_buy(mock_betavariate):
     
     #assert for without pending orders
     bot = RandomBot()
     starting_balance = bot.balance
+    
     assert bot._get_trade_quantity(100.00, Side.BUY, "TSLA") == starting_balance / 100.00
 
     #assert for with pending orders
@@ -18,7 +28,7 @@ def test_get_trade_quantity_buy():
     assert bot._get_trade_quantity(100.00, Side.BUY, "TSLA") == (starting_balance - 500) / 100.00
 
 
-def test_get_trade_quantity_sell():
+def test_get_trade_quantity_sell(mock_betavariate):
     bot = RandomBot()
     
     #assert for no portfolio
@@ -34,7 +44,7 @@ def test_get_trade_quantity_sell():
     assert bot._get_trade_quantity(100.00, Side.SELL, "TSLA") == 2
 
 
-def test_get_trade_quantity_sell_with_pending_other_symbol():
+def test_get_trade_quantity_sell_with_pending_other_symbol(mock_betavariate):
 
     bot = RandomBot()
     bot.portfolio["TSLA"] = 5
@@ -65,7 +75,7 @@ def test_update_state_sell():
     assert bot.balance == starting_balance + 300.00
 
 
-def test_bot_portfolio_recovery(respx_mock):
+def test_bot_portfolio_recovery(respx_mock, mock_betavariate):
     """Tests cancel_pending_orders() to ensure correct recovery of 
     portfolio upon full use of stocks owned"""
     
