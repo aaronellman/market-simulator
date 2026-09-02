@@ -1,7 +1,13 @@
 from typer import Typer
 from bots.strategies.random_bot import RandomBot
+from bots.strategies.market_maker import MarketMaker
 import asyncio
-strategies = {"random": RandomBot}
+
+
+strategies = {"random": RandomBot,
+              "rnd": RandomBot,
+              "market_maker": MarketMaker,
+              "mm": MarketMaker}
 
 
 app = Typer()
@@ -11,8 +17,9 @@ async def _run_bots(coroutines):
     await asyncio.gather(*coroutines)
 
 
+
 @app.command("start-bots")
-def start(count: int, strategy: str, interval: int = 1, starting_balance: float = 1000.00, base_api_url: str = "http://127.0.0.1:8000"):
+def start(count: int, strategy: str, interval: float = 1.0, starting_balance: float = 1000.00, base_api_url: str = "http://127.0.0.1:8000"):
 
     bot_instances = []
 

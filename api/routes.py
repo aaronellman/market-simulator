@@ -112,6 +112,16 @@ def trades(symbol: str | None = None, matching_engine = Depends(get_matching_eng
     
     return result
 
+@router.get("/trades/last", status_code=200)
+def get_last_trade(symbol: str, matching_engine = Depends(get_matching_engine)):
+
+    try:
+        result = matching_engine.repository.get_last_price(symbol)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return result
+
 @router.get("/symbols", status_code=200)
 def symbols():
     return list(SYMBOLS)

@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 from httpx import AsyncClient
 from core.order import Side
 import uuid
+import asyncio
 
 class BaseBot(ABC):
 
-    def __init__(self, balance: float = 10000.00, base_api_url: str = "http://127.0.0.1:8000", interval: int = 1):
+    def __init__(self, balance: float = 10000.00, base_api_url: str = "http://127.0.0.1:8000", interval: float = 1.0):
         self.bot_id = str(uuid.uuid4())[:8]
         self.balance = balance
         self.portfolio: dict[str, float] = {}
@@ -16,6 +17,7 @@ class BaseBot(ABC):
         self.orders_url = f"{self.base_api_url}/orders"
         self.symbols_url = f"{self.base_api_url}/symbols"
         self.order_book_url = f"{self.base_api_url}/orderbook"
+        self.trades_url = f"{self.base_api_url}/trades"
 
     @abstractmethod
     def run(self):
@@ -94,3 +96,36 @@ class BaseBot(ABC):
                 self._update_state(symbol, quantity_traded, side, price) 
             if quantity_traded < quantity:
                 self.pending_orders.append(order)
+
+    async def _get_last_price(self, client, symbol: str):
+
+        response = await client.get(f"{self.trades_url}/last", params={"symbol": symbol})
+
+        if response.status_code == 200:
+            result = response.json()
+            return result
+
+        return None
+
+
+    async def _get_total_net_worth(self, client) -> float | None:
+
+        result = 0.00
+        valid_portfolio = [symbol for symbol in self.portfolio if self.portfolio[symbol] > 0 ]
+        prices = []
+
+        quantities = [self.portfolio[symbol] for symbol in valid_portfolio]
+    
+        for symbol in valid_portfolio:
+            prices.append(self._get_last_price(client, symbol))
+
+        prices = await asyncio.gather(*prices)
+
+        if None in prices:
+            return None
+
+        for price, quantity in zip(prices, quantities):
+            result += price * quantity
+
+        result += self.balance
+        return round(result, 2)
