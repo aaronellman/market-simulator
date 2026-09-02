@@ -10,12 +10,17 @@ strategies = {"random": RandomBot,
               "mm": MarketMaker}
 
 
+abbreviations = {
+                RandomBot: "rnd",
+                MarketMaker: "mm" 
+                }
+
+
 app = Typer()
 
 
 async def _run_bots(coroutines):
     await asyncio.gather(*coroutines)
-
 
 
 @app.command("start-bots")
@@ -31,6 +36,7 @@ def start(count: int, strategy: str, interval: float = 1.0, starting_balance: fl
     for i in range(count):
         
         bot = bot_class(starting_balance, base_api_url, interval)
+        bot.bot_id = abbreviations.get(bot_class) + bot.bot_id
         bot_instances.append(bot)
 
     coroutines = [bot.run() for bot in bot_instances]
