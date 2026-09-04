@@ -20,8 +20,9 @@ class MarketMaker(BaseBot):
 
         if config is None:
             config = MarketMakerConfig()
-
         self.config = config
+
+        self.last_mid = None
         super().__init__(balance, base_api_url, interval)
 
 
@@ -32,6 +33,7 @@ class MarketMaker(BaseBot):
             #currently uses a 3:2:1 ratio from closest to furthest from mid
             unit = quantity / 6
             return (unit * 3, unit * 2, unit)
+
 
     def _get_trade_quantity(self, price: float, side: Side, symbol: str):
         if side == Side.BUY:
@@ -75,10 +77,14 @@ class MarketMaker(BaseBot):
                 ask_price = asks[0]["price"] if asks else None
                 bid_price = bids[0]["price"] if bids else None
 
-                if ask_price is None or bid_price is None:
-                    continue 
-
-                mid = (bid_price + ask_price) / 2
+                if ask_price is None and bid_price is None and self.last_mid is None:
+                    continue
+                elif ask_price and bid_price:
+                    mid = (bid_price + ask_price) / 2
+                else:
+                    mid = self.last_mid
+                
+                self.last_mid = mid #setting last_mid for future one sided books
 
                 stock_value = self.portfolio.get(SYMBOL, 0) * mid
                 current_stock_ratio = stock_value / (stock_value + self.balance)
@@ -93,7 +99,7 @@ class MarketMaker(BaseBot):
                 if self.portfolio.get(SYMBOL, 0) > 0:
                     ask_rungs = [(1 + (i + 0.5) * self.config.spread + skew) * mid for i in range(self.config.ladder_levels)]
 
-                if self.balance >= ask_price:
+                if self.balance >= mid:
                     bid_rungs = [(1 - (i + 0.5) * self.config.spread + skew) * mid for i in range(self.config.ladder_levels)]
 
                 #trade distribution calculation for asks
