@@ -83,6 +83,9 @@ class MarketMaker(BaseBot):
                     mid = (bid_price + ask_price) / 2
                 else:
                     mid = self.last_mid
+
+                if mid is None: #catching any extra  edge cases
+                    continue
                 
                 self.last_mid = mid #setting last_mid for future one sided books
 
