@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from core.order import Order, Side
-from api.routes import router, matching_engine, SYMBOLS
+from api.routes import router, matching_engines, index_order_symbol, SYMBOLS
 import logging
 from contextlib import asynccontextmanager
 
@@ -16,7 +16,8 @@ def supply_market(quantity: int = 1000, price: float = 10):
     for symbol in SYMBOLS:
 
         order = Order(price, quantity, side, symbol)
-        matching_engine.match(order)
+        matching_engines[symbol].match(order)
+        index_order_symbol(order)
 
 
 @asynccontextmanager

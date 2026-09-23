@@ -58,7 +58,7 @@ class RandomBot(BaseBot):
                 if self.balance == 0 and self.portfolio.get(symbol) == 0:
                     continue
                 
-                prices = await client.get(self.order_book_url)
+                prices = await client.get(self.order_book_url, params={"symbol": symbol})
                 asks = prices.json()["asks"]
                 bids = prices.json()["bids"]
 

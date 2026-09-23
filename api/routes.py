@@ -48,21 +48,24 @@ class TradeResponse(BaseModel):
     id: uuid.UUID
 
 
-order_book = OrderBook()
 repository = Repository()
-matching_engine = MatchingEngine(order_book, repository)
+matching_engines = {symbol:MatchingEngine(OrderBook(), repository) for symbol in SYMBOLS}
+symbol_by_order_id = {}
 
 
-def get_matching_engine():
-    return matching_engine
+def get_matching_engines():
+    return matching_engines
 
+def index_order_symbol(order: Order):
+    symbol_by_order_id[order.id] = order.symbol
 
 @router.post("/orders", status_code=201)
-def create_order(order_data: OrderModel, matching_engine = Depends(get_matching_engine)):
+def create_order(order_data: OrderModel, matching_engines = Depends(get_matching_engines)):
     order = Order(**order_data.model_dump())
+    index_order_symbol(order)
     logger.info(order_data.model_dump())
     try:
-        result = matching_engine.match(order)
+        result = matching_engines[order.symbol].match(order)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
@@ -70,10 +73,13 @@ def create_order(order_data: OrderModel, matching_engine = Depends(get_matching_
 
 
 @router.get("/orders", status_code=200)
-def get_orders_by_ids(order_ids: list[uuid.UUID] = Query(default=[]), matching_engine = Depends(get_matching_engine)):
+def get_orders_by_ids(order_ids: list[uuid.UUID] = Query(default=[]), matching_engines = Depends(get_matching_engines)):
     orders = []
     for id in order_ids:
-        order = matching_engine.order_book.get_order_by_id(id)
+        symbol = symbol_by_order_id.get(id)
+        if symbol is None:
+            continue
+        order = matching_engines[symbol].order_book.get_order_by_id(id)
         if order is not None:
             orders.append(order)
     
@@ -81,18 +87,23 @@ def get_orders_by_ids(order_ids: list[uuid.UUID] = Query(default=[]), matching_e
 
 
 @router.delete("/orders/{order_id}", status_code=200)
-def delete_order_by_id(order_id: uuid.UUID, matching_engine = Depends(get_matching_engine)):
-    order = matching_engine.order_book.get_order_by_id(order_id)
+def delete_order_by_id(order_id: uuid.UUID, matching_engines = Depends(get_matching_engines)):
+    symbol = symbol_by_order_id.get(order_id)
+    if symbol is None:
+        raise HTTPException(status_code=404, detail="order not found")
+    
+    order = matching_engines[symbol].order_book.get_order_by_id(order_id)
     if order is None:
         raise HTTPException(status_code=404, detail="order not found")
     
-    matching_engine.order_book.cancel_order(order)
+    matching_engines[symbol].order_book.cancel_order(order)
     return {"message": "order cancelled"}
 
 
 @router.get("/orderbook", status_code=200, response_model=OrderBookResponse)
-def orderbook(matching_engine = Depends(get_matching_engine)):
+def orderbook(symbol: str, matching_engines = Depends(get_matching_engines)):
     response = {}
+    matching_engine = matching_engines[symbol]
     bids = matching_engine.order_book.bids
     asks = matching_engine.order_book.asks
     
@@ -103,20 +114,20 @@ def orderbook(matching_engine = Depends(get_matching_engine)):
 
 
 @router.get("/trades", status_code=200, response_model=list[TradeResponse])
-def trades(symbol: str | None = None, matching_engine = Depends(get_matching_engine)):
+def trades(symbol: str | None = None, matching_engines = Depends(get_matching_engines)):
 
     try:
-        result = matching_engine.repository.get_trades(symbol)
+        result = next(iter(matching_engines.values())).repository.get_trades(symbol)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
     return result
 
 @router.get("/trades/last", status_code=200)
-def get_last_trade(symbol: str, matching_engine = Depends(get_matching_engine)):
+def get_last_trade(symbol: str, matching_engines = Depends(get_matching_engines)):
 
     try:
-        result = matching_engine.repository.get_last_price(symbol)
+        result = next(iter(matching_engines.values())).repository.get_last_price(symbol)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
