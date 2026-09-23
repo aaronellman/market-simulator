@@ -70,7 +70,7 @@ class MarketMaker(BaseBot):
                 elif old_pending_orders == self.pending_orders and self.pending_orders != []:
                     continue
                     
-                prices = await client.get(self.order_book_url)
+                prices = await client.get(self.order_book_url, params={"symbol": SYMBOL})
                 asks = prices.json()["asks"]
                 bids = prices.json()["bids"]
                 
