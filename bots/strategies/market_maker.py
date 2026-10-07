@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from bots.base import BaseBot
-from httpx import AsyncClient
+from httpx import AsyncClient, Limits
 from asyncio import sleep
 import asyncio
 from core.order import Side
+
 
 @dataclass()
 class MarketMakerConfig():
@@ -58,7 +59,7 @@ class MarketMaker(BaseBot):
         SYMBOL = "TSLA"
 
 
-        async with AsyncClient() as client:
+        async with AsyncClient(limits=Limits(keepalive_expiry=2)) as client:
             while True:
 
                 await sleep(self.interval)
