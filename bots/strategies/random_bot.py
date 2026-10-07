@@ -1,5 +1,5 @@
 from bots.base import BaseBot
-from httpx import AsyncClient
+from httpx import AsyncClient, Limits
 from random import choice, uniform, betavariate
 from core.order import Side
 from asyncio import sleep
@@ -45,7 +45,7 @@ class RandomBot(BaseBot):
     
 
     async def run(self):
-        async with AsyncClient() as client:
+        async with AsyncClient(limits=Limits(keepalive_expiry=2)) as client:
             while True:
                 await sleep(self.interval)
 
