@@ -37,13 +37,87 @@ def test_matching_partitioned_by_symbol():
         # reset the market
         pass
 
-def test_create_resting_order():
+def test_order_without_match_rests():
     query_params = {"price": 10.0, "quantity": 1, "side": Side.BUY.value, "symbol": "AAPL"}
     response = client.post(url=ORDERS_URL,json=query_params)
     assert response.status_code == 201
 
     data = response.json()
     assert data["matched"] == []
+
+def test_matched_order_returns_201():
+    query_params = {"price": 10.0, "quantity": 1, "side": Side.BUY.value, "symbol": "AAPL"}
+    response = client.post(url=ORDERS_URL, json=query_params)
+    data = response.json()
+    assert response.status_code == 201 and data["matched"] == []
+
+    query_params = {"price": 10.0, "quantity": 1, "side": Side.SELL.value, "symbol": "AAPL"}
+    response = client.post(url=ORDERS_URL, json=query_params)
+    data = response.json()
+    assert response.status_code == 201 and data["matched"] != []
+
+def test_invalid_order():
+    query_params = {"price": 10.0, "quantity": 1, "side": Side.BUY.value, "symbol": "INVALID"}
+    response = client.post(url=ORDERS_URL, json=query_params)
+    data = response.json()
+    assert response.status_code == 422
+
+def test_get_resting_order_by_id():
+    query_params = {"price": 10.0, "quantity": 1, "side": Side.BUY.value, "symbol": "AAPL"}
+    response = client.post(url=ORDERS_URL, json=query_params)
+    data = response.json()
+    id = data["order_id"]
+    assert response.status_code == 201
+
+    response = client.get(url=ORDERS_URL, params={"order_ids": id})
+    data = response.json()
+    order = data["orders"][0]
+    assert response.status_code == 200 and order["id"] == id
+
+def test_unknown_order_id_is_handled():
+    id = "efc77495-2c75-49f9-ab0a-975da0642f73"
+    response = client.get(url=ORDERS_URL, params={"order_ids": id})
+    data = response.json()
+    assert response.status_code == 200 and data["orders"] == []
+
+def test_delete_order():
+    query_params = {"price": 10.0, "quantity": 1, "side": Side.BUY.value, "symbol": "AAPL"}
+    response = client.post(url=ORDERS_URL, json=query_params)
+    data = response.json()
+    id = data["order_id"]
+    assert response.status_code == 201
+
+    response = client.delete(f"{ORDERS_URL}/{id}")
+    assert response.status_code == 200
+
+    response = client.get("/orderbook", params={"symbol": "AAPL"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["bids"] == []
+
+def test_delete_unknown_id_returns_404():
+    id = "efc77495-2c75-49f9-ab0a-975da0642f73"
+    response = client.delete(f"{ORDERS_URL}/{id}")
+    assert response.status_code == 404
+
+def test_orderbook_contains_correct_values():
+    query_params = {"price": 10.0, "quantity": 1, "side": Side.BUY.value, "symbol": "AAPL"}
+    response = client.post(url=ORDERS_URL, json=query_params)
+    assert response.status_code == 201
+
+    query_params = {"price": 1000.50, "quantity": 23, "side": Side.SELL.value, "symbol": "TSLA"}
+    response = client.post(url=ORDERS_URL, json=query_params)
+    assert response.status_code == 201
+
+    response = client.get("/orderbook", params={"symbol": "AAPL"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["bids"][0] == {"price": 10.0, "quantity": 1.0}
+
+    response = client.get("/orderbook", params={"symbol": "TSLA"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["asks"][0] == {"price": 1000.5, "quantity": 23.0}
 
 def test_orderbook_resets_between_tests():
     query_params = {"symbol": "AAPL"}
