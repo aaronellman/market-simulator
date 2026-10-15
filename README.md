@@ -11,7 +11,7 @@ A simulated financial exchange engine built in Python. Features a limit order bo
 - **Limit order book** - bids and asks maintained in price-time priority order using `SortedDict`
 - **Matching engine** - partial fills supported, walks the book until the incoming order is fully filled or no match is possible
 - **Multiple instruments** - each symbol maintains its own independent order book
-- **REST API** - place orders, cancel orders, query the order book and trade history *(in progress)*
+- **REST API** - place orders, cancel orders, query the order book and trade history
 - **Bot framework** - configurable bots with pluggable strategies
 - **Trade persistence** - full trade history stored in PostgreSQL
 - **Load testing** - spin up N bots and observe throughput metrics in real time *(planned)*
@@ -38,18 +38,28 @@ market-simulator/
 ├── core/
 │   ├── order.py            # Order dataclass, Side enum
 │   ├── order_book.py       # OrderBook - manages bids and asks
-│   └── matching_engine.py  # MatchingEngine - price-time priority matching
+│   ├── matching_engine.py  # MatchingEngine - price-time priority matching
+│   └── trade.py            # Trade dataclass
 ├── api/
 │   ├── main.py             # FastAPI app entry point
 │   └── routes.py           # Route definitions
 ├── bots/
 │   ├── base.py             # Base Bot class with run loop
+│   ├── run.py              # CLI for launching bots
 │   └── strategies/         # Bot strategy implementations
+│       ├── random_bot.py   # RandomBot - random buy/sell around the book
+│       └── market_maker.py # MarketMaker - quotes a ladder on both sides
 ├── db/
-│   └── repository.py       # PostgreSQL persistence layer
+│   ├── repository.py       # PostgreSQL persistence layer
+│   └── schema.sql          # Database schema
 ├── tests/
 │   ├── test_order_book.py  # OrderBook unit tests
-│   └── test_matching.py    # MatchingEngine unit tests
+│   ├── test_matching.py    # MatchingEngine unit tests
+│   ├── test_trade.py       # Trade unit tests
+│   ├── test_bots.py        # Bot strategy tests
+│   └── test_api.py         # REST API route tests
+├── .github/workflows/
+│   └── tests.yml           # CI - runs the test suite against PostgreSQL
 ├── .env.example            # Required environment variables
 ├── docker-compose.yml      # PostgreSQL container
 ├── pyproject.toml
@@ -105,7 +115,7 @@ Example - 3 random bots, trading every 2 seconds with a starting balance of 500:
 python -m bots.run 3 random --interval 2 --starting-balance 500
 ```
 
-Available strategies: `random`
+Available strategies: `random` (or `rnd`), `market_maker` (or `mm`)
 
 ### Running Tests
 
@@ -146,16 +156,12 @@ When an order is placed it is matched against the opposite side of the book usin
 
 ---
 
-## Known Technical Debt
-
-- `GET /orderbook` does not filter by symbol, will need updating when multiple instruments are supported
-
 ## Roadmap
 
 - [x] REST API endpoints
 - [x] PostgreSQL trade persistence
 - [x] Bot framework with random strategy
-- [ ] Market maker bot strategy
+- [x] Market maker bot strategy
 - [ ] Load testing script - spin up N bots, log throughput metrics
 - [ ] Live leaderboard for bot performance
 - [ ] Index fund tracking top symbols by volume or criteria
