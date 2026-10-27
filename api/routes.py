@@ -28,6 +28,22 @@ class OrderModel(BaseModel):
             raise ValueError(f"Invalid Symbol {v} in order, use a symbol from GET /symbols")
 
 
+    @field_validator("quantity")
+    def validate_quantity(cls, v):
+        if v > 0:
+            return v
+        else:
+            raise ValueError(f"Invalid Quantity {v} in order, quantity must be greater than zero")
+
+
+    @field_validator("price")
+    def validate_price(cls, v):
+        if v > 0:
+            return v
+        else:
+            raise ValueError(f"Invalid Price {v} in order, price must be greater than zero")
+
+
 class PriceLevelModel(BaseModel):
     price: float
     quantity: float

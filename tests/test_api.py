@@ -51,8 +51,28 @@ def test_matched_order_returns_201():
     assert data["matched"] != []
 
 
-def test_invalid_order():
+def test_invalid_order_symbol():
     order_data = {"price": 10.0, "quantity": 1, "side": Side.BUY.value, "symbol": "INVALID"}
+    response = client.post(url=ORDERS_URL, json=order_data)
+    assert response.status_code == 422
+
+
+def test_invalid_order_quantity():    
+    order_data = {"price": 10.0, "quantity": -1, "side": Side.BUY.value, "symbol": "TSLA"}
+    response = client.post(url=ORDERS_URL, json=order_data)
+    assert response.status_code == 422
+
+    order_data = {"price": 10.0, "quantity": 0, "side": Side.BUY.value, "symbol": "TSLA"}
+    response = client.post(url=ORDERS_URL, json=order_data)
+    assert response.status_code == 422
+
+
+def test_invalid_order_price():    
+    order_data = {"price": -1.0, "quantity": 1, "side": Side.BUY.value, "symbol": "TSLA"}
+    response = client.post(url=ORDERS_URL, json=order_data)
+    assert response.status_code == 422
+
+    order_data = {"price": 0, "quantity": 1, "side": Side.BUY.value, "symbol": "TSLA"}
     response = client.post(url=ORDERS_URL, json=order_data)
     assert response.status_code == 422
 
